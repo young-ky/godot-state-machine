@@ -1,0 +1,93 @@
+[gd_scene load_steps=13 format=3 uid="uid://c0eu7p33ml8ee"]
+
+[ext_resource type="Script" path="res://src/player/Player.gd" id="1_6xfqd"]
+[ext_resource type="Texture2D" uid="uid://du61w307qik83" path="res://icon.svg" id="1_rxyjk"]
+[ext_resource type="Script" path="res://src/player/movement/StateMachine.gd" id="3_3qcui"]
+[ext_resource type="Script" path="res://src/player/movement/states/Idle.gd" id="3_qpldw"]
+[ext_resource type="Script" path="res://src/player/movement/states/Run.gd" id="4_k6w4k"]
+[ext_resource type="Script" path="res://src/player/movement/states/Dash.gd" id="5_f30td"]
+[ext_resource type="Script" path="res://src/player/movement/states/Jump.gd" id="6_kuc11"]
+[ext_resource type="Script" path="res://src/player/movement/states/Fall.gd" id="7_j5p3a"]
+[ext_resource type="Script" path="res://src/player/PlayerMoveComponent.gd" id="8_sve54"]
+[ext_resource type="Script" path="res://src/player/movement/StateDebug.gd" id="10_yxvh5"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cobod"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_an735"]
+outline_size = 6
+outline_color = Color(0, 0, 0, 1)
+shadow_size = 6
+shadow_offset = Vector2(6, 2)
+
+[node name="Player" type="CharacterBody2D"]
+script = ExtResource("1_6xfqd")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(-1.90735e-06, 1.90735e-06)
+scale = Vector2(0.15625, 0.234375)
+texture = ExtResource("1_rxyjk")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_cobod")
+
+[node name="MovementStateMachine" type="Node" parent="." node_paths=PackedStringArray("initialState")]
+script = ExtResource("3_3qcui")
+initialState = NodePath("Idle")
+
+[node name="Idle" type="Node" parent="MovementStateMachine" node_paths=PackedStringArray("runState", "jumpState", "fallState", "dashState")]
+script = ExtResource("3_qpldw")
+runState = NodePath("../Run")
+jumpState = NodePath("../Jump")
+fallState = NodePath("../Fall")
+dashState = NodePath("../Dash")
+
+[node name="Run" type="Node" parent="MovementStateMachine" node_paths=PackedStringArray("idleState", "jumpState", "fallState", "dashState")]
+script = ExtResource("4_k6w4k")
+idleState = NodePath("../Idle")
+jumpState = NodePath("../Jump")
+fallState = NodePath("../Fall")
+dashState = NodePath("../Dash")
+
+[node name="Dash" type="Node" parent="MovementStateMachine" node_paths=PackedStringArray("runState", "idleState", "jumpState", "fallState", "dashState")]
+script = ExtResource("5_f30td")
+runState = NodePath("../Run")
+idleState = NodePath("../Idle")
+jumpState = NodePath("../Jump")
+fallState = NodePath("../Fall")
+dashState = NodePath(".")
+
+[node name="Jump" type="Node" parent="MovementStateMachine" node_paths=PackedStringArray("idleState", "runState", "fallState")]
+script = ExtResource("6_kuc11")
+idleState = NodePath("../Idle")
+runState = NodePath("../Run")
+fallState = NodePath("../Fall")
+
+[node name="Fall" type="Node" parent="MovementStateMachine" node_paths=PackedStringArray("idleState", "runState")]
+script = ExtResource("7_j5p3a")
+idleState = NodePath("../Idle")
+runState = NodePath("../Run")
+
+[node name="PlayerMoveComponent" type="Node" parent="."]
+script = ExtResource("8_sve54")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+visible = false
+
+[node name="Control" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StateDebug" type="Label" parent="CanvasLayer/Control" node_paths=PackedStringArray("stateMachine")]
+offset_left = 16.0
+offset_right = 166.0
+offset_bottom = 30.0
+scale = Vector2(2, 2)
+text = "State: Idle"
+label_settings = SubResource("LabelSettings_an735")
+vertical_alignment = 1
+script = ExtResource("10_yxvh5")
+stateMachine = NodePath("../../../MovementStateMachine")
